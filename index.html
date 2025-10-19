@@ -30,8 +30,8 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-            height: 180px;
-            max-height: 220px;
+            height: 200px; /* Aumentado para acomodar barras mais grossas */
+            max-height: 240px;
         }
     </style>
 </head>
@@ -111,10 +111,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // ✅ Nomes e timezones atualizados para display. A lógica de sessão usará tempos BRT fixos.
             const markets = [
                 { id: 'cme', name: 'CME (EUA)', flag: '🇺🇸', timeZone: 'America/Chicago' },
-                { id: 'eurex', name: 'Eurex (ALE)', flag: '🇩🇪', timeZone: 'Europe/Berlin' },
+                { id: 'eurex', name: 'Eurex (EUR)', flag: '🇪🇺', timeZone: 'Europe/Berlin' }, // Bandeira atualizada
                 { id: 'liffe', name: 'LIFFE (UK)', flag: '🇬🇧', timeZone: 'Europe/London' },
                 { id: 'jpx', name: 'JPX (JAP)', flag: '🇯🇵', timeZone: 'Asia/Tokyo' },
                 { id: 'b3', name: 'B3 (BRA)', flag: '🇧🇷', timeZone: 'America/Sao_Paulo' }
@@ -180,7 +179,6 @@
                 return days > 0 ? `${days}d ${hours}:${minutes}:${seconds}` : `${hours}:${minutes}:${seconds}`;
             }
 
-            // ✅ LÓGICA DE SESSÃO TOTALMENTE REFEITA
             function renderSessions() {
                 const sessionsContainer = document.getElementById('sessions')?.querySelector('.space-y-4');
                 if (!sessionsContainer) return;
@@ -204,24 +202,20 @@
                             let nextClose = setTime(new Date(nowBRT), 18, 25);
 
                             if (openDays.includes(nowDay)) {
-                                if (nowTime < openTime) { // Antes de abrir
-                                    targetDate = nextOpen;
-                                    countdownText = `Abre em ${getCountdown(targetDate)}`;
-                                } else if (nowTime >= openTime && nowTime < closeTime) { // Aberto
+                                if (nowTime < openTime) {
+                                    countdownText = `Abre em ${getCountdown(nextOpen)}`;
+                                } else if (nowTime >= openTime && nowTime < closeTime) {
                                     statusText = 'Aberto'; statusColor = 'text-green-400';
-                                    targetDate = nextClose;
-                                    countdownText = `Fecha em ${getCountdown(targetDate)}`;
-                                } else { // Fechou no dia
+                                    countdownText = `Fecha em ${getCountdown(nextClose)}`;
+                                } else {
                                     if (nowDay === 5) nextOpen.setDate(nextOpen.getDate() + 3);
                                     else nextOpen.setDate(nextOpen.getDate() + 1);
-                                    targetDate = nextOpen;
-                                    countdownText = `Abre em ${getCountdown(targetDate)}`;
+                                    countdownText = `Abre em ${getCountdown(nextOpen)}`;
                                 }
-                            } else { // Fim de semana
+                            } else {
                                 const daysToAdd = nowDay === 6 ? 2 : 1;
                                 nextOpen.setDate(nextOpen.getDate() + daysToAdd);
-                                targetDate = nextOpen;
-                                countdownText = `Abre em ${getCountdown(targetDate)}`;
+                                countdownText = `Abre em ${getCountdown(nextOpen)}`;
                             }
                             break;
                         }
@@ -234,8 +228,7 @@
                             if (isAfterOpen && isBeforeClose) {
                                 if (nowBRT.getHours() === pauseHour) {
                                     statusText = 'Pausa'; statusColor = 'text-yellow-400';
-                                    let nextResume = setTime(new Date(nowBRT), 19, 0);
-                                    countdownText = `Volta em ${getCountdown(nextResume)}`;
+                                    countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 19, 0))}`;
                                 } else {
                                     statusText = 'Aberto'; statusColor = 'text-green-400';
                                     let nextPause = setTime(new Date(nowBRT), 18, 0);
@@ -244,9 +237,8 @@
                                 }
                             } else {
                                 let nextOpen = setTime(new Date(nowBRT), 19, 0);
-                                if (nowDay >= 5) { // Se for sexta pós fechamento ou sábado
-                                    const daysToAdd = 7 - nowDay;
-                                    nextOpen.setDate(nextOpen.getDate() + daysToAdd);
+                                if (nowDay >= 5) {
+                                    nextOpen.setDate(nextOpen.getDate() + (7 - nowDay));
                                 }
                                 countdownText = `Abre em ${getCountdown(nextOpen)}`;
                             }
@@ -283,16 +275,13 @@
                         case 'jpx': {
                             displayTimes = '21:00 - 07:00 BRT';
                             const openTime = 21, closeTime = 7, pauseStart = 3.5, pauseEnd = 4.5;
-                            // A sessão de segunda começa domingo 21h. A de sexta termina 7h.
-                            const isOpen = (nowDay !== 5 && nowDay !== 6 && nowTime >= openTime) || // Abre Sun-Thu à noite
-                                           (nowDay !== 6 && nowDay !== 0 && nowTime < closeTime); // Fecha Mon-Fri de manhã
+                            const isOpen = (nowDay !== 5 && nowDay !== 6 && nowTime >= openTime) ||
+                                           (nowDay !== 6 && nowDay !== 0 && nowTime < closeTime);
                             
                             if (isOpen) {
-                                // Pausa
                                 if(nowTime >= pauseStart && nowTime < pauseEnd){
                                     statusText = 'Pausa'; statusColor = 'text-yellow-400';
-                                    let nextResume = setTime(new Date(nowBRT), 4, 30);
-                                    countdownText = `Volta em ${getCountdown(nextResume)}`;
+                                    countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 4, 30))}`;
                                 } else {
                                     statusText = 'Aberto'; statusColor = 'text-green-400';
                                     let nextPause = setTime(new Date(nowBRT), 3, 30);
@@ -301,9 +290,9 @@
                                 }
                             } else {
                                 let nextOpen = setTime(new Date(nowBRT), 21, 0);
-                                if(nowDay === 5 || (nowDay === 6) || (nowDay === 0 && nowTime < openTime)) {
-                                    if(nowDay === 5 && nowTime >= closeTime) nextOpen.setDate(nextOpen.getDate() + 2); // Sexta -> Domingo
-                                    if(nowDay === 6) nextOpen.setDate(nextOpen.getDate() + 1); // Sábado -> Domingo
+                                if(nowDay === 5 || nowDay === 6 || (nowDay === 0 && nowTime < openTime)) {
+                                    if(nowDay === 5 && nowTime >= closeTime) nextOpen.setDate(nextOpen.getDate() + 2);
+                                    if(nowDay === 6) nextOpen.setDate(nextOpen.getDate() + 1);
                                 }
                                 countdownText = `Abre em ${getCountdown(nextOpen)}`;
                             }
@@ -326,40 +315,43 @@
                 });
             }
 
-
             let sessionsChart;
             function renderSessionsChart() {
                 const ctx = document.getElementById('sessionsChart')?.getContext('2d');
                 if(!ctx) return;
                 
-                const brtTimeZone = 'America/Sao_Paulo';
-                const now = new Date();
-                const nowBRT = new Date(now.toLocaleString('en-US', { timeZone: brtTimeZone }));
-
+                const nowBRT = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                const nowHour = nowBRT.getHours() + nowBRT.getMinutes() / 60;
+                
+                // ✅ Adicionado cores e espessuras
                 const marketIntervals = {
-                    'liffe': { flag: '🇬🇧', name: 'LIFFE (UK)', intervals: [[4, 18]] },
-                    'cme': { flag: '🇺🇸', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]] },
-                    'eurex': { flag: '🇩🇪', name: 'Eurex (ALE)', intervals: [[3.25, 17]] },
-                    'jpx': { flag: '🇯🇵', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]] },
-                    'b3': { flag: '🇧🇷', name: 'B3 (BRA)', intervals: [[9.75, 18.416]] },
+                    'liffe': { flag: '🇬🇧', name: 'LIFFE (UK)', intervals: [[4, 18]], openColor: '#ef4444' }, // Vermelho
+                    'cme': { flag: '🇺🇸', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]], openColor: '#3b82f6' }, // Azul
+                    'eurex': { flag: '🇪🇺', name: 'Eurex (EUR)', intervals: [[3.25, 17]], openColor: '#3b82f6' }, // Azul
+                    'jpx': { flag: '🇯🇵', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]], openColor: '#ffffff' }, // Branco
+                    'b3': { flag: '🇧🇷', name: 'B3 (BRA)', intervals: [[9.75, 18.416]], openColor: '#22c55e' }, // Verde
+                    closedColor: '#6b7280', // Cinza
+                    openThickness: 20,
+                    closedThickness: 8
                 };
                 
                 const orderedData = ['liffe', 'cme', 'eurex', 'jpx', 'b3'].map(id => marketIntervals[id]);
 
-                const datasets = [];
-                const nowHour = nowBRT.getHours() + nowBRT.getMinutes() / 60;
+                const isMarketCurrentlyOpen = (market, time) => {
+                    return market.intervals.some(interval => time >= interval[0] && time < interval[1]);
+                };
 
+                const datasets = [];
                 orderedData.forEach(market => {
+                    const isActive = isMarketCurrentlyOpen(market, nowHour);
                     market.intervals.forEach(interval => {
-                        const isActive = nowHour >= interval[0] && nowHour < interval[1];
                         datasets.push({
                             label: market.name,
                             data: [{ x: interval, y: market.name }],
-                            backgroundColor: isActive ? 'rgba(74, 222, 128, 0.8)' : 'rgba(59, 130, 246, 0.6)',
+                            backgroundColor: isActive ? market.openColor : marketIntervals.closedColor,
                             borderColor: 'transparent',
                             borderRadius: 5,
-                            borderWidth: 1,
-                            borderSkipped: false
+                            barThickness: isActive ? marketIntervals.openThickness : marketIntervals.closedThickness
                         });
                     });
                 });
@@ -381,12 +373,14 @@
                         });
                         
                         const currentHour = nowBRT.getHours() + nowBRT.getMinutes() / 60;
+                        const anyMarketOpen = orderedData.some(market => isMarketCurrentlyOpen(market, currentHour));
                         const xPos = x.getPixelForValue(currentHour);
 
                         if (xPos >= x.left && xPos <= x.right) {
                             ctx.beginPath();
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-                            ctx.lineWidth = 1.5;
+                            // ✅ Lógica de cor e espessura da linha vertical
+                            ctx.strokeStyle = anyMarketOpen ? '#22c55e' : 'rgba(255, 255, 255, 0.7)';
+                            ctx.lineWidth = anyMarketOpen ? 3 : 1.5;
                             ctx.setLineDash([4, 4]);
                             ctx.moveTo(xPos, top);
                             ctx.lineTo(xPos, bottom);
@@ -408,10 +402,7 @@
                     options: {
                         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                         layout: { padding: { left: 30 } },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
                         scales: {
                             x: { min: 0, max: 24, ticks: { color: '#9CA3AF', stepSize: 2, callback: (v) => `${v}h` }, grid: { color: 'rgba(107, 114, 128, 0.3)' } },
                             y: { ticks: { display: false }, grid: { display: false } }
@@ -421,8 +412,6 @@
                 });
             }
             
-            // --- O RESTANTE DO CÓDIGO (CONVERSORES, ALERTAS, ETC.) PERMANECE O MESMO ---
-
             function populateTimezoneSelect() {
                 const timezoneSelect = document.getElementById('timezone-select');
                 if(!timezoneSelect) return;
@@ -450,20 +439,16 @@
                     convertedTimesDiv.textContent = 'Insira um horário.';
                     return;
                 }
-
-                const [inputHour, inputMinute] = inputTime.split(':').map(Number);
                 
-                // Create a date object that correctly represents the input time in the source timezone
                 const now = new Date();
                 const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${inputTime}:00`;
-                const baseDate = new Date(new Date(dateStr).toLocaleString("en-US", {timeZone: inputTimeZone}));
-                const offset = baseDate.getTimezoneOffset()*60*1000;
-                const sourceDate = new Date(new Date(dateStr).getTime() + offset);
+                const sourceDate = new Date(new Date(dateStr).toLocaleString("en-US", {timeZone: inputTimeZone}));
+
 
                 markets.forEach(market => {
                     if (market.timeZone === inputTimeZone) return;
 
-                     const targetTime = new Intl.DateTimeFormat('en-US', {
+                     const targetTime = new Intl.DateTimeFormat('pt-BR', {
                         timeZone: market.timeZone,
                         hour: '2-digit',
                         minute: '2-digit',
