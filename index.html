@@ -30,8 +30,8 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-            height: 200px; /* Aumentado para acomodar barras mais grossas */
-            max-height: 240px;
+            height: 240px; 
+            max-height: 280px;
         }
     </style>
 </head>
@@ -113,7 +113,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const markets = [
                 { id: 'cme', name: 'CME (EUA)', flag: '🇺🇸', timeZone: 'America/Chicago' },
-                { id: 'eurex', name: 'Eurex (EUR)', flag: '🇪🇺', timeZone: 'Europe/Berlin' }, // Bandeira atualizada
+                { id: 'eurex', name: 'Eurex (EUR)', flag: '🇪🇺', timeZone: 'Europe/Berlin' },
                 { id: 'liffe', name: 'LIFFE (UK)', flag: '🇬🇧', timeZone: 'Europe/London' },
                 { id: 'jpx', name: 'JPX (JAP)', flag: '🇯🇵', timeZone: 'Asia/Tokyo' },
                 { id: 'b3', name: 'B3 (BRA)', flag: '🇧🇷', timeZone: 'America/Sao_Paulo' }
@@ -185,135 +185,128 @@
                 sessionsContainer.innerHTML = '';
                 const brtTimeZone = 'America/Sao_Paulo';
                 const nowBRT = new Date(new Date().toLocaleString('en-US', { timeZone: brtTimeZone }));
-                const nowDay = nowBRT.getDay(); // 0 = Domingo, 6 = Sábado
+                const nowDay = nowBRT.getDay();
                 const nowTime = nowBRT.getHours() + nowBRT.getMinutes() / 60;
 
-                markets.forEach(market => {
-                    let statusText = 'Fechado', statusColor = 'text-red-400', countdownText = '', targetDate, displayTimes = '';
+                const marketColors = {
+                    b3: '#22c55e', cme: '#3b82f6', eurex: '#3b82f6',
+                    liffe: '#ef4444', jpx: '#ffffff'
+                };
+                const closedColor = '#6b7280';
 
-                    const setTime = (date, h, m) => { date.setHours(h, m, 0, 0); return date; };
+                markets.forEach(market => {
+                    let statusText = 'Fechado', statusColor = 'text-red-400', countdownText = '', displayTimes = '';
+                    let sessionStart, sessionEnd;
+
+                    const setTime = (date, h, m) => { const d = new Date(date); d.setHours(h, m, 0, 0); return d; };
                     
                     switch (market.id) {
-                        case 'b3': {
+                        case 'b3':
                             displayTimes = '09:45 - 18:25 BRT';
-                            const openDays = [1, 2, 3, 4, 5];
-                            const openTime = 9.75, closeTime = 18.416;
-                            let nextOpen = setTime(new Date(nowBRT), 9, 45);
-                            let nextClose = setTime(new Date(nowBRT), 18, 25);
-
-                            if (openDays.includes(nowDay)) {
-                                if (nowTime < openTime) {
-                                    countdownText = `Abre em ${getCountdown(nextOpen)}`;
-                                } else if (nowTime >= openTime && nowTime < closeTime) {
-                                    statusText = 'Aberto'; statusColor = 'text-green-400';
-                                    countdownText = `Fecha em ${getCountdown(nextClose)}`;
-                                } else {
-                                    if (nowDay === 5) nextOpen.setDate(nextOpen.getDate() + 3);
-                                    else nextOpen.setDate(nextOpen.getDate() + 1);
-                                    countdownText = `Abre em ${getCountdown(nextOpen)}`;
-                                }
-                            } else {
-                                const daysToAdd = nowDay === 6 ? 2 : 1;
-                                nextOpen.setDate(nextOpen.getDate() + daysToAdd);
-                                countdownText = `Abre em ${getCountdown(nextOpen)}`;
+                            if ([1,2,3,4,5].includes(nowDay)) {
+                                sessionStart = setTime(nowBRT, 9, 45);
+                                sessionEnd = setTime(nowBRT, 18, 25);
                             }
                             break;
-                        }
-                         case 'cme': {
+                        case 'cme':
                             displayTimes = 'Dom 19h - Sex 18h BRT';
-                            const openHour = 19, closeHour = 18, pauseHour = 18;
-                            const isAfterOpen = nowDay > 0 || (nowDay === 0 && nowTime >= openHour);
-                            const isBeforeClose = nowDay < 5 || (nowDay === 5 && nowTime < closeHour);
-                            
+                            const isAfterOpen = nowDay > 0 || (nowDay === 0 && nowTime >= 19);
+                            const isBeforeClose = nowDay < 5 || (nowDay === 5 && nowTime < 18);
                             if (isAfterOpen && isBeforeClose) {
-                                if (nowBRT.getHours() === pauseHour) {
-                                    statusText = 'Pausa'; statusColor = 'text-yellow-400';
-                                    countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 19, 0))}`;
-                                } else {
-                                    statusText = 'Aberto'; statusColor = 'text-green-400';
-                                    let nextPause = setTime(new Date(nowBRT), 18, 0);
-                                    if (nowBRT > nextPause) nextPause.setDate(nextPause.getDate() + 1);
-                                    countdownText = `Pausa em ${getCountdown(nextPause)}`;
-                                }
-                            } else {
-                                let nextOpen = setTime(new Date(nowBRT), 19, 0);
-                                if (nowDay >= 5) {
-                                    nextOpen.setDate(nextOpen.getDate() + (7 - nowDay));
-                                }
-                                countdownText = `Abre em ${getCountdown(nextOpen)}`;
+                                sessionStart = setTime(nowBRT, 19, 0);
+                                if (nowTime < 19) sessionStart.setDate(sessionStart.getDate() - 1);
+                                sessionEnd = setTime(nowBRT, 18, 0);
+                                if (nowTime >= 19) sessionEnd.setDate(sessionEnd.getDate() + 1);
                             }
                             break;
-                        }
-                         case 'eurex':
-                         case 'liffe': {
-                            const isEurex = market.id === 'eurex';
-                            displayTimes = isEurex ? '03:15 - 17:00 BRT' : '04:00 - 18:00 BRT';
-                            const openDays = [1, 2, 3, 4, 5];
-                            const openTime = isEurex ? 3.25 : 4.0;
-                            const closeTime = isEurex ? 17.0 : 18.0;
-                            let nextOpen = setTime(new Date(nowBRT), Math.floor(openTime), (openTime % 1) * 60);
-                            let nextClose = setTime(new Date(nowBRT), Math.floor(closeTime), (closeTime % 1) * 60);
-                            
-                            if(openDays.includes(nowDay)){
-                                if(nowTime < openTime){
-                                    countdownText = `Abre em ${getCountdown(nextOpen)}`;
-                                } else if (nowTime >= openTime && nowTime < closeTime){
-                                    statusText = 'Aberto'; statusColor = 'text-green-400';
-                                    countdownText = `Fecha em ${getCountdown(nextClose)}`;
-                                } else {
-                                    if(nowDay === 5) nextOpen.setDate(nextOpen.getDate() + 3);
-                                    else nextOpen.setDate(nextOpen.getDate() + 1);
-                                    countdownText = `Abre em ${getCountdown(nextOpen)}`;
-                                }
-                            } else {
-                               const daysToAdd = nowDay === 6 ? 2 : 1;
-                               nextOpen.setDate(nextOpen.getDate() + daysToAdd);
-                               countdownText = `Abre em ${getCountdown(nextOpen)}`;
+                        case 'eurex':
+                            displayTimes = '03:15 - 17:00 BRT';
+                            if ([1,2,3,4,5].includes(nowDay)) {
+                                sessionStart = setTime(nowBRT, 3, 15);
+                                sessionEnd = setTime(nowBRT, 17, 0);
                             }
                             break;
-                        }
-                        case 'jpx': {
+                        case 'liffe':
+                            displayTimes = '04:00 - 18:00 BRT';
+                            if ([1,2,3,4,5].includes(nowDay)) {
+                                sessionStart = setTime(nowBRT, 4, 0);
+                                sessionEnd = setTime(nowBRT, 18, 0);
+                            }
+                            break;
+                        case 'jpx':
                             displayTimes = '21:00 - 07:00 BRT';
-                            const openTime = 21, closeTime = 7, pauseStart = 3.5, pauseEnd = 4.5;
-                            const isOpen = (nowDay !== 5 && nowDay !== 6 && nowTime >= openTime) ||
-                                           (nowDay !== 6 && nowDay !== 0 && nowTime < closeTime);
-                            
+                            const isOpen = (nowDay !== 5 && nowDay !== 6 && nowTime >= 21) || (nowDay !== 6 && nowDay !== 0 && nowTime < 7);
                             if (isOpen) {
-                                if(nowTime >= pauseStart && nowTime < pauseEnd){
-                                    statusText = 'Pausa'; statusColor = 'text-yellow-400';
-                                    countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 4, 30))}`;
+                                if (nowTime >= 21) {
+                                    sessionStart = setTime(nowBRT, 21, 0);
+                                    sessionEnd = setTime(nowBRT, 7, 0);
+                                    sessionEnd.setDate(sessionEnd.getDate() + 1);
                                 } else {
-                                    statusText = 'Aberto'; statusColor = 'text-green-400';
-                                    let nextPause = setTime(new Date(nowBRT), 3, 30);
-                                    if(nowTime >= openTime) nextPause.setDate(nextPause.getDate() + 1);
-                                    countdownText = `Pausa em ${getCountdown(nextPause)}`;
+                                    sessionStart = setTime(nowBRT, 21, 0);
+                                    sessionStart.setDate(sessionStart.getDate() - 1);
+                                    sessionEnd = setTime(nowBRT, 7, 0);
                                 }
-                            } else {
-                                let nextOpen = setTime(new Date(nowBRT), 21, 0);
-                                if(nowDay === 5 || nowDay === 6 || (nowDay === 0 && nowTime < openTime)) {
-                                    if(nowDay === 5 && nowTime >= closeTime) nextOpen.setDate(nextOpen.getDate() + 2);
-                                    if(nowDay === 6) nextOpen.setDate(nextOpen.getDate() + 1);
-                                }
-                                countdownText = `Abre em ${getCountdown(nextOpen)}`;
                             }
                             break;
-                        }
                     }
 
+                    // Status and Countdown Logic
+                    if (sessionStart && sessionEnd) {
+                        if (nowBRT >= sessionStart && nowBRT < sessionEnd) {
+                            statusText = 'Aberto'; statusColor = 'text-green-400';
+                            countdownText = `Fecha em ${getCountdown(sessionEnd)}`;
+                            if (market.id === 'cme' && nowBRT.getHours() === 18) {
+                                statusText = 'Pausa'; statusColor = 'text-yellow-400';
+                                countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 19, 0))}`;
+                            }
+                            if (market.id === 'jpx' && nowTime >= 3.5 && nowTime < 4.5) {
+                                statusText = 'Pausa'; statusColor = 'text-yellow-400';
+                                countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 4, 30))}`;
+                            }
+                        } else if (nowBRT < sessionStart) {
+                             countdownText = `Abre em ${getCountdown(sessionStart)}`;
+                        }
+                    } 
+                    if (!countdownText) {
+                         // Find next session logic here if needed, for simplicity we leave it empty if not today
+                    }
+
+                    // Progress Bar Logic
+                    let progressWidth = 0;
+                    let progressBarColor = closedColor;
+                    if (statusText === 'Aberto') {
+                        const sessionDuration = sessionEnd.getTime() - sessionStart.getTime();
+                        const elapsedTime = nowBRT.getTime() - sessionStart.getTime();
+                        const remainingPercentage = 100 - (elapsedTime / sessionDuration) * 100;
+                        progressWidth = Math.max(0, remainingPercentage);
+                        progressBarColor = marketColors[market.id];
+                    } else if (nowBRT < sessionStart) {
+                        progressWidth = 100;
+                    }
+
+                    const progressBarHTML = `
+                        <div class="bg-gray-700 rounded-full h-2 w-full mt-2 overflow-hidden">
+                            <div class="h-2 rounded-full transition-all duration-500" style="width: ${progressWidth}%; background-color: ${progressBarColor};"></div>
+                        </div>`;
+
                     const sessionDiv = `
-                        <div class="bg-gray-800 p-4 rounded-xl flex justify-between items-center shadow">
-                            <div>
-                                <span class="font-medium text-white">${market.flag} ${market.name}</span>
-                                <span class="text-sm text-gray-400 ml-2 block sm:inline-block sm:ml-2">(${displayTimes})</span>
+                        <div class="bg-gray-800 p-4 rounded-xl shadow">
+                             <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="font-medium text-white">${market.flag} ${market.name}</span>
+                                    <span class="text-sm text-gray-400 ml-2 block sm:inline-block sm:ml-2">(${displayTimes})</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs ${statusColor} block">${statusText}</span>
+                                    <span class="text-sm font-semibold text-gray-300">${countdownText || ''}</span>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <span class="text-xs ${statusColor} block">${statusText}</span>
-                                <span class="text-sm font-semibold text-gray-300">${countdownText}</span>
-                            </div>
+                            ${progressBarHTML}
                         </div>`;
                     sessionsContainer.innerHTML += sessionDiv;
                 });
             }
+
 
             let sessionsChart;
             function renderSessionsChart() {
@@ -324,13 +317,13 @@
                 const nowHour = nowBRT.getHours() + nowBRT.getMinutes() / 60;
                 
                 const marketIntervals = {
-                    'liffe': { flag: '🇬🇧', name: 'LIFFE (UK)', intervals: [[4, 18]], openColor: '#ef4444' }, // Vermelho
-                    'cme': { flag: '🇺🇸', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]], openColor: '#3b82f6' }, // Azul
-                    'eurex': { flag: '🇪🇺', name: 'Eurex (EUR)', intervals: [[3.25, 17]], openColor: '#3b82f6' }, // Azul
-                    'jpx': { flag: '🇯🇵', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]], openColor: '#ffffff' }, // Branco
-                    'b3': { flag: '🇧🇷', name: 'B3 (BRA)', intervals: [[9.75, 18.416]], openColor: '#22c55e' }, // Verde
-                    closedColor: '#6b7280', // Cinza
-                    openThickness: 16, // ✅ Ajustado para 2x a espessura original
+                    'liffe': { flag: '🇬🇧', name: 'LIFFE (UK)', intervals: [[4, 18]], openColor: '#ef4444' },
+                    'cme': { flag: '🇺🇸', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]], openColor: '#3b82f6' },
+                    'eurex': { flag: '🇪🇺', name: 'Eurex (EUR)', intervals: [[3.25, 17]], openColor: '#3b82f6' },
+                    'jpx': { flag: '🇯🇵', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]], openColor: '#ffffff' },
+                    'b3': { flag: '🇧🇷', name: 'B3 (BRA)', intervals: [[9.75, 18.416]], openColor: '#22c55e' },
+                    closedColor: '#6b7280',
+                    openThickness: 16,
                     closedThickness: 8
                 };
                 
@@ -339,7 +332,7 @@
                 const isMarketCurrentlyOpen = (market, time) => {
                     const nowDay = nowBRT.getDay();
                     if (market.name.includes('B3') || market.name.includes('LIFFE') || market.name.includes('Eurex')) {
-                        if (![1,2,3,4,5].includes(nowDay)) return false; // Dias de semana
+                        if (![1,2,3,4,5].includes(nowDay)) return false; 
                     }
                     if (market.name.includes('CME')) {
                          const isAfterOpen = nowDay > 0 || (nowDay === 0 && time >= 19);
@@ -391,7 +384,7 @@
                         if (xPos >= x.left && xPos <= x.right) {
                             ctx.beginPath();
                             ctx.strokeStyle = anyMarketOpen ? '#22c55e' : 'rgba(255, 255, 255, 0.7)';
-                            ctx.lineWidth = anyMarketOpen ? 3 : 1.5;
+                            ctx.lineWidth = anyMarketOpen ? 2.5 : 1.5;
                             ctx.setLineDash([4, 4]);
                             ctx.moveTo(xPos, top);
                             ctx.lineTo(xPos, bottom);
@@ -416,7 +409,12 @@
                         plugins: { legend: { display: false }, tooltip: { enabled: false } },
                         scales: {
                             x: { min: 0, max: 24, ticks: { color: '#9CA3AF', stepSize: 2, callback: (v) => `${v}h` }, grid: { color: 'rgba(107, 114, 128, 0.3)' } },
-                            y: { ticks: { display: false }, grid: { display: false } }
+                            y: { 
+                                ticks: { display: false }, 
+                                grid: { display: false },
+                                categoryPercentage: 0.7,
+                                barPercentage: 0.9
+                            }
                         }
                     },
                     plugins: [customLabelsPlugin]
