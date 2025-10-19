@@ -8,16 +8,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
-        }
-        .font-brand {
-            font-family: 'Cormorant Garamond', serif;
-        }
-        body {
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -26,100 +21,79 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        .no-spinner { -moz-appearance: textfield; }
+        .no-spinner {
+            -moz-appearance: textfield;
+        }
         .chart-container {
-            position: relative; 
-            width: 100%; 
-            max-width: 600px; 
-            margin-left: auto; 
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
             margin-right: auto;
             height: 150px;
             max-height: 200px;
         }
-        .toggle-checkbox:checked { right: 0; border-color: #4F46E5; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #4F46E5; }
-        
-        .kairos-frame {
-            border: 1px solid;
-            border-image-slice: 1;
-            border-width: 1px;
-            border-image-source: linear-gradient(to bottom right, #4A5568, #A0AEC0);
-            padding: 2px 10px;
-        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-300">
+<body class="bg-gray-900 text-gray-200">
 
-    <div id="app" class="max-w-md mx-auto bg-black min-h-screen">
-        
-        <header class="sticky top-0 bg-black bg-opacity-80 backdrop-blur-md z-10 p-4 pt-6 flex justify-between items-center">
-            <div class="kairos-frame">
-                 <h1 class="text-2xl font-brand font-semibold text-gray-200 tracking-widest">KAIROS</h1>
-            </div>
-            <button id="mode-toggle" class="text-sm bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-full transition-all duration-300">
-                <span id="mode-toggle-icon" class="text-indigo-400">⚫</span> <span id="mode-toggle-text">Detalhado</span>
-            </button>
-        </header>
+    <div id="app" class="max-w-md mx-auto bg-gray-900 min-h-screen">
+        <header class="sticky top-0 bg-gray-900 bg-opacity-80 backdrop-blur-md z-10 p-4 pt-6 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-white">KAIROS</h1>
+            </header>
 
-        <main class="p-4 space-y-8">
-            
+        <main class="p-4 space-y-6">
             <section id="clocks">
-                <h2 class="text-lg font-semibold mb-4 text-indigo-300">Relógios Globais</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Clocks will be injected here -->
-                </div>
+                <h2 class="text-lg font-semibold mb-3 text-blue-300">Relógios Globais</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    </div>
             </section>
 
             <section id="sessions">
-                <h2 class="text-lg font-semibold mb-4 text-indigo-300">Sessões de Mercado</h2>
-                 <p class="text-sm text-gray-400 mb-4">Acompanhe o status de abertura dos principais mercados globais, com horários e contadores ajustados para o fuso de Brasília (BRT).</p>
+                <h2 class="text-lg font-semibold mb-3 text-blue-300">Sessões de Mercado</h2>
+                <p class="text-sm text-gray-400 mb-4">
+                    Acompanhe o estado de abertura dos principais mercados globais, com horários e contadores ajustados para o fuso de Brasília (BRT).
+                </p>
                 <div class="space-y-4">
-                     <!-- Sessions will be injected here -->
-                </div>
-                 <div class="mt-6 bg-gray-900 border border-gray-800 p-4 rounded-xl">
-                     <h3 class="text-md font-medium text-center text-gray-400 mb-2">Sobreposição de Sessões (BRT)</h3>
-                     <div class="chart-container">
+                    </div>
+                <div class="mt-4 bg-gray-800 p-4 rounded-xl">
+                    <h3 class="text-md font-medium text-center text-gray-300 mb-2">Sobreposição de Sessões (BRT)</h3>
+                    <div class="chart-container">
                         <canvas id="sessionsChart"></canvas>
                     </div>
-                 </div>
+                </div>
             </section>
 
-            <div id="detailed-sections" class="space-y-8 transition-all duration-500">
+            <div class="space-y-6">
                 <section id="time-converter">
-                    <h2 class="text-lg font-semibold mb-4 text-indigo-300">Conversor de Horário</h2>
+                    <h2 class="text-lg font-semibold mb-3 text-blue-300">Conversor de Horário</h2>
                     <p class="text-sm text-gray-400 mb-4">Insira um horário em qualquer mercado para ver a correspondência nos outros centros financeiros instantaneamente.</p>
-                    <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl space-y-4">
-                        <div class="flex items-center space-x-3">
-                            <input type="time" id="time-input" class="bg-gray-800 text-white rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <select id="timezone-select" class="bg-gray-800 text-white rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </select>
+                    <div class="bg-gray-800 p-4 rounded-xl space-y-4">
+                        <div class="flex items-center space-x-2">
+                            <input type="time" id="time-input" class="bg-gray-700 text-white rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="timezone-select" class="bg-gray-700 text-white rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                         </div>
-                        <div id="converted-times" class="text-center text-gray-300 space-y-2 pt-2">
-                        </div>
+                        <div id="converted-times" class="text-center text-gray-300 space-y-1"></div>
                     </div>
                 </section>
 
                 <section id="currency-converter">
-                    <h2 class="text-lg font-semibold mb-4 text-indigo-300">Conversor Cambial</h2>
-                    <p class="text-sm text-gray-400 mb-4">Cotações em tempo real. Digite um valor em qualquer moeda para converter para as demais.</p>
-                    <div id="currency-list" class="bg-gray-900 border border-gray-800 p-4 rounded-xl space-y-4">
-                    </div>
+                    <h2 class="text-lg font-semibold mb-3 text-blue-300">Conversor Cambial</h2>
+                    <p class="text-sm text-gray-400 mb-4">Cotações em tempo real. Digite um valor em qualquer moeda para converter para as demais. As taxas são atualizadas a cada minuto.</p>
+                    <div id="currency-list" class="bg-gray-800 p-4 rounded-xl space-y-3"></div>
                 </section>
 
                 <section id="alerts">
-                    <h2 class="text-lg font-semibold mb-4 text-indigo-300">Alertas Inteligentes</h2>
+                    <h2 class="text-lg font-semibold mb-3 text-blue-300">Alertas Inteligentes</h2>
                     <p class="text-sm text-gray-400 mb-4">Configure notificações para aberturas de sessão e eventos económicos de alta volatilidade.</p>
-                    <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl space-y-4">
+                    <div class="bg-gray-800 p-4 rounded-xl space-y-4">
                         <div>
-                            <h3 class="font-medium text-white mb-3">Alertas de Sessão</h3>
-                            <div id="session-alerts" class="space-y-3">
-                            </div>
+                            <h3 class="font-medium text-white mb-2">Alertas de Sessão</h3>
+                            <div id="session-alerts" class="space-y-2"></div>
                         </div>
-                         <div class="border-t border-gray-800 my-4"></div>
-                         <div>
-                            <h3 class="font-medium text-white mb-3">Próximos Eventos de Volatilidade</h3>
-                            <div id="economic-events" class="space-y-2 text-sm">
-                            </div>
+                        <div>
+                            <h3 class="font-medium text-white mb-2">Próximos Eventos de Volatilidade</h3>
+                            <div id="economic-events" class="space-y-2 text-sm"></div>
                         </div>
                     </div>
                 </section>
@@ -127,178 +101,642 @@
         </main>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-10 right-1/2 translate-x-1/2 w-11/12 max-w-sm flex items-center bg-indigo-600 text-white py-3 px-5 rounded-lg shadow-2xl transform translate-y-[200%] transition-transform duration-500 ease-in-out">
-        <span id="toast-icon" class="mr-3 text-xl"></span>
+    <div id="toast" class="fixed bottom-10 right-10 flex items-center bg-blue-500 text-white py-3 px-5 rounded-lg shadow-lg transform translate-x-[150%] transition-transform duration-500 ease-in-out">
+        <span id="toast-icon" class="mr-3 text-xl">🔔</span>
         <span id="toast-message"></span>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const markets = [
-                { id: 'ny', name: 'Nova York', flag: 'https://flagcdn.com/w40/us.png', timeZone: 'America/New_York', open: '09:30', close: '16:00' },
-                { id: 'frankfurt', name: 'Frankfurt', flag: 'https://flagcdn.com/w40/de.png', timeZone: 'Europe/Berlin', open: '09:00', close: '17:30' },
-                { id: 'london', name: 'Londres', flag: 'https://flagcdn.com/w40/gb.png', timeZone: 'Europe/London', open: '08:00', close: '16:30' },
-                { id: 'tokyo', name: 'Tóquio', flag: 'https://flagcdn.com/w40/jp.png', timeZone: 'Asia/Tokyo', open: '09:00', close: '15:00' },
-                { id: 'brasilia', name: 'Brasília', flag: 'https://flagcdn.com/w40/br.png', timeZone: 'America/Sao_Paulo', open: '10:00', close: '18:00' }
+                { id: 'ny', name: 'Nova Iorque', flag: '🇺🇸', timeZone: 'America/New_York', open: '09:30', close: '16:00' },
+                { id: 'frankfurt', name: 'Frankfurt', flag: '🇪🇺', timeZone: 'Europe/Berlin', open: '09:00', close: '17:30' },
+                { id: 'london', name: 'Londres', flag: '🇬🇧', timeZone: 'Europe/London', open: '08:00', close: '16:30' },
+                { id: 'tokyo', name: 'Tóquio', flag: '🇯🇵', timeZone: 'Asia/Tokyo', open: '09:00', close: '15:00' },
+                { id: 'brasilia', name: 'Brasília', flag: '🇧🇷', timeZone: 'America/Sao_Paulo', open: '10:00', close: '18:00' }
             ];
+
             const currencies = [
-                { code: 'BRL', name: 'Real', flag: 'https://flagcdn.com/w40/br.png' },
-                { code: 'USD', name: 'Dólar', flag: 'https://flagcdn.com/w40/us.png' },
-                { code: 'EUR', name: 'Euro', flag: 'https://flagcdn.com/w40/eu.png' },
-                { code: 'GBP', name: 'Libra', flag: 'https://flagcdn.com/w40/gb.png' },
-                { code: 'CHF', name: 'Franco', flag: 'https://flagcdn.com/w40/ch.png' }
+                { code: 'BRL', name: 'Real', flag: '🇧🇷' },
+                { code: 'USD', name: 'Dólar', flag: '🇺🇸' },
+                { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+                { code: 'GBP', name: 'Libra', flag: '🇬🇧' },
+                { code: 'CHF', name: 'Franco', flag: '🇨🇭' }
             ];
+
             const economicEventsMock = [
                 { time: '10:30', event: 'CPI (EUA)', impact: 3 },
-                { time: '15:00', event: 'Discurso do Fed', impact: 3 },
+                { time: '15:00', event: 'Discurso da Fed', impact: 3 },
                 { time: 'Amanhã 09:30', event: 'Payroll (EUA)', impact: 3 },
             ];
 
             let currencyRates = {};
-            let isDetailedMode = true;
             let alertSettings = { tokyo: true, london: true, ny: true };
             const triggeredAlerts = new Set();
             let audioContext;
-            
-            function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
-            function playSound() { if (!audioContext) return; const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.type = 'sine'; o.frequency.setValueAtTime(880, audioContext.currentTime); g.gain.setValueAtTime(0.1, audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5); o.start(); o.stop(audioContext.currentTime + 0.5); }
-            function showToast(message, icon) { const t = document.getElementById('toast'); t.querySelector('#toast-message').textContent = message; t.querySelector('#toast-icon').textContent = icon; t.classList.remove('translate-y-[200%]'); t.classList.add('translate-y-0'); playSound(); setTimeout(() => { t.classList.remove('translate-y-0'); t.classList.add('translate-y-[200%]'); }, 4000); }
-            function formatTime(date, timeZone) { return date.toLocaleTimeString('pt-BR', { timeZone, hour: '2-digit', minute: '2-digit' }); }
 
-            function createClock(market) {
-                return `
-                    <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl flex flex-col text-center items-center">
-                        <div class="flex items-center mb-2">
-                             <img src="${market.flag}" alt="${market.name}" class="w-5 h-5 rounded-full object-cover mr-2">
-                             <span class="font-semibold text-white">${market.name}</span>
-                        </div>
-                        <div id="clock-${market.id}" class="text-4xl font-light font-mono text-gray-200">${formatTime(new Date(), market.timeZone)}</div>
-                    </div>
-                `;
-            }
-
-            function createSession(market) { return `...`; } // Omitido por brevidade, a lógica está abaixo
-            function createCurrencyInput(currency) { return `...`; } // Omitido por brevidade
-            function createSessionAlertToggle(market) { return `...`; } // Omitido por brevidade
-            
-            function updateClocks() { markets.forEach(m => { const el = document.getElementById(`clock-${m.id}`); if (el) el.textContent = formatTime(new Date(), m.timeZone); }); }
-
-            function getMarketStatus(market) {
+            function getUtcOffset(timeZone) {
                 const now = new Date();
-                const options = { timeZone: market.timeZone, hour12: false };
-                const timeInMarketTZStr = now.toLocaleString('en-US', options);
-                const timeInMarketTZ = new Date(timeInMarketTZStr);
-                const openTime = new Date(timeInMarketTZ); openTime.setHours(...market.open.split(':'), 0, 0);
-                const closeTime = new Date(timeInMarketTZ); closeTime.setHours(...market.close.split(':'), 0, 0);
-                const day = timeInMarketTZ.getDay();
-                const isWeekend = (market.id !== 'tokyo' && (day === 0 || day === 6));
-                const isOpen = !isWeekend && timeInMarketTZ >= openTime && timeInMarketTZ < closeTime;
-                let nextEventTime = isOpen ? closeTime : openTime;
-                if (!isOpen && timeInMarketTZ >= closeTime) { nextEventTime.setDate(nextEventTime.getDate() + 1); }
-                const nextDay = nextEventTime.getDay();
-                if (nextDay === 6) nextEventTime.setDate(nextEventTime.getDate() + 2);
-                if (nextDay === 0) nextEventTime.setDate(nextEventTime.getDate() + 1);
-                return { isOpen, countdownSeconds: Math.floor((nextEventTime - timeInMarketTZ) / 1000), eventType: isOpen ? 'Fecha' : 'Abre', openTimeLocal: formatTime(openTime, 'America/Sao_Paulo'), closeTimeLocal: formatTime(closeTime, 'America/Sao_Paulo') };
+                const formatter = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'shortOffset' });
+                const parts = formatter.formatToParts(now);
+                const offsetPart = parts.find(p => p.type === 'timeZoneName').value;
+                return offsetPart.replace('GMT', 'UTC');
             }
 
-            function updateSessions() {
-                ['tokyo', 'london', 'ny'].forEach(id => {
-                    const market = markets.find(m => m.id === id);
-                    if (!market) return;
-                    const status = getMarketStatus(market);
-                    document.getElementById(`status-indicator-${id}`).className = `w-3 h-3 rounded-full mr-3 transition-colors ${status.isOpen ? 'bg-green-500' : 'bg-gray-500'}`;
-                    document.getElementById(`status-text-${id}`).textContent = status.isOpen ? 'Aberta' : 'Fechada';
-                    document.getElementById(`status-text-${id}`).className = `text-sm font-semibold transition-colors ${status.isOpen ? 'text-green-400' : 'text-gray-400'}`;
-                    document.getElementById(`open-time-${id}`).textContent = status.openTimeLocal;
-                    document.getElementById(`close-time-${id}`).textContent = status.closeTimeLocal;
-                    const countdownEl = document.getElementById(`countdown-${id}`);
-                    if (status.countdownSeconds > 0) { const h = Math.floor(status.countdownSeconds / 3600).toString().padStart(2, '0'); const m = Math.floor((status.countdownSeconds % 3600) / 60).toString().padStart(2, '0'); const s = (status.countdownSeconds % 60).toString().padStart(2, '0'); countdownEl.textContent = `${status.eventType} em ${h}:${m}:${s}`; }
-                    else { countdownEl.textContent = 'Atualizando...'; }
-                    if (alertSettings[id]) { const key = `${id}-pre`; if (status.eventType === 'Abre' && status.countdownSeconds <= 900 && status.countdownSeconds > 899 && !triggeredAlerts.has(key)) { showToast(`${market.name} abre em 15 minutos!`, '⏰'); triggeredAlerts.add(key); } }
+            // --- Funções de Ajuda ---
+            function formatTime(date) {
+                return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+
+            // --- Relógios Globais ---
+            function renderClocks() {
+                const clocksContainer = document.querySelector('#clocks .grid');
+                clocksContainer.innerHTML = ''; 
+
+                markets.forEach(market => {
+                    const now = new Date();
+                    const marketTime = new Date(now.toLocaleString('en-US', { timeZone: market.timeZone }));
+                    const formattedTime = formatTime(marketTime);
+                    const utcOffset = getUtcOffset(market.timeZone);
+
+                    const clockDiv = `
+                        <div class="bg-gray-800 p-3 rounded-xl shadow flex flex-col items-center">
+                            <span class="text-xl">${market.flag}</span>
+                            <span class="text-xs text-gray-400 mt-1">${market.name}</span>
+                            <span class="font-bold text-lg text-white">${formattedTime}</span>
+                            <span class="text-xs text-gray-500">${utcOffset}</span>
+                        </div>
+                    `;
+                    clocksContainer.innerHTML += clockDiv;
                 });
             }
 
-            function updateTimeConverter() {
-                const timeInput = document.getElementById('time-input').value;
-                const sourceTz = document.getElementById('timezone-select').value;
-                const outputEl = document.getElementById('converted-times');
-                if (!timeInput) { outputEl.innerHTML = ''; return; }
-                const [hours, minutes] = timeInput.split(':');
-                outputEl.innerHTML = '';
-                markets.filter(m => m.timeZone !== sourceTz).forEach(market => {
-                    try { const tempDate = new Date(); tempDate.setHours(hours, minutes, 0, 0); const convertedTime = formatTime(tempDate, market.timeZone); outputEl.innerHTML += `<p><img src="${market.flag}" class="w-5 h-5 inline mr-2 rounded-full"/> ${market.name}: <span class="font-bold text-white">${convertedTime}</span></p>`; } catch(e) { console.error("Time conversion error", e); }
+            // --- Funções de Countdown ---
+            function getCountdown(targetDate) {
+                const now = new Date();
+                const diff = targetDate.getTime() - now.getTime();
+
+                if (diff < 0) return { countdown: '00:00:00', isFuture: false };
+
+                const totalSeconds = Math.floor(diff / 1000);
+                const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+                const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+                const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+                return { countdown: `${hours}:${minutes}:${seconds}`, isFuture: true };
+            }
+
+            // --- Sessões de Mercado (FUNÇÃO CORRIGIDA) ---
+            function renderSessions() {
+                const sessionsContainer = document.getElementById('sessions').querySelector('.space-y-4');
+                sessionsContainer.innerHTML = '';
+                const brtTimeZone = 'America/Sao_Paulo';
+                const now = new Date(); // Referência
+                const nowBRT = new Date(now.toLocaleString('en-US', { timeZone: brtTimeZone }));
+
+                markets.forEach(market => {
+                    const [openH, openM] = market.open.split(':').map(Number);
+                    const [closeH, closeM] = market.close.split(':').map(Number);
+
+                    // 1. Criar a data de abertura no FUSO DO MERCADO
+                    const marketOpenTime = new Date(now.toLocaleString('en-US', { timeZone: market.timeZone }));
+                    marketOpenTime.setHours(openH, openM, 0, 0);
+
+                    // 2. Criar a data de fechamento no FUSO DO MERCADO
+                    const marketCloseTime = new Date(now.toLocaleString('en-US', { timeZone: market.timeZone }));
+                    marketCloseTime.setHours(closeH, closeM, 0, 0);
+
+                    // 3. Converter essas datas para o FUSO DE BRASÍLIA
+                    const marketOpenBRT = new Date(marketOpenTime.toLocaleString('en-US', { timeZone: brtTimeZone }));
+                    const marketCloseBRT = new Date(marketCloseTime.toLocaleString('en-US', { timeZone: brtTimeZone }));
+
+                    // 4. Lidar com mercados que fecham no "dia seguinte" (ex: Tóquio)
+                    // Ex: Abertura Sáb 21:00 BRT, Fechamento Dom 03:00 BRT
+                    if (marketCloseBRT < marketOpenBRT) {
+                        // Se a hora atual (ex: Dom 02:00) for *antes* do fechamento, a abertura foi "ontem"
+                        if (nowBRT < marketCloseBRT) {
+                            marketOpenBRT.setDate(marketOpenBRT.getDate() - 1);
+                        }
+                        // Se a hora atual (ex: Sáb 22:00) for *depois* da abertura, o fechamento é "amanhã"
+                        else {
+                             marketCloseBRT.setDate(marketCloseBRT.getDate() + 1);
+                        }
+                    }
+
+                    // --- Lógica de Status e Countdown ---
+                    let statusText = '';
+                    let countdownText = '';
+                    let statusColor = '';
+                    let targetCountdown;
+
+                    if (nowBRT >= marketOpenBRT && nowBRT < marketCloseBRT) {
+                        statusText = 'Aberto';
+                        statusColor = 'text-green-400';
+                        targetCountdown = marketCloseBRT;
+                        countdownText = `Fecha em ${getCountdown(targetCountdown).countdown}`;
+                    } else if (nowBRT < marketOpenBRT) {
+                        statusText = 'Fechado';
+                        statusColor = 'text-red-400';
+                        targetCountdown = marketOpenBRT;
+                        countdownText = `Abre em ${getCountdown(targetCountdown).countdown}`;
+                    } else { // nowBRT >= marketCloseBRT (já fechou para o dia)
+                        statusText = 'Fechado';
+                        statusColor = 'text-red-400';
+                        // Calcula para o próximo dia de abertura
+                        const nextOpen = new Date(marketOpenBRT);
+                        nextOpen.setDate(nextOpen.getDate() + 1); // Próximo dia
+                        targetCountdown = nextOpen;
+                        countdownText = `Abre em ${getCountdown(targetCountdown).countdown}`;
+                    }
+
+                    const sessionDiv = `
+                        <div class="bg-gray-800 p-4 rounded-xl flex justify-between items-center shadow">
+                            <div>
+                                <span class="text-xl mr-2">${market.flag}</span>
+                                <span class="font-medium text-white">${market.name}</span>
+                                <span class="text-sm text-gray-400 ml-2">(${market.open} - ${market.close} ${market.timeZone.split('/')[1].replace('_', ' ')})</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs ${statusColor} block">${statusText}</span>
+                                <span class="text-sm font-semibold text-gray-300">${countdownText}</span>
+                            </div>
+                        </div>
+                    `;
+                    sessionsContainer.innerHTML += sessionDiv;
                 });
             }
+
+
+            // --- Gráfico de Sobreposição de Sessões ---
+            let sessionsChart;
+
+            function renderSessionsChart() {
+                const ctx = document.getElementById('sessionsChart').getContext('2d');
+                const brtTimeZone = 'America/Sao_Paulo';
+                const now = new Date();
+
+                const chartData = markets.map(market => {
+                    const [openHour, openMinute] = market.open.split(':').map(Number);
+                    const [closeHour, closeMinute] = market.close.split(':').map(Number);
+
+                    // Criar datas de referência no fuso horário do mercado
+                    const marketOpenTime = new Date(now.toLocaleString('en-US', { timeZone: market.timeZone }));
+                    marketOpenTime.setHours(openHour, openMinute, 0, 0);
+
+                    const marketCloseTime = new Date(now.toLocaleString('en-US', { timeZone: market.timeZone }));
+                    marketCloseTime.setHours(closeHour, closeMinute, 0, 0);
+
+                    // Converter para BRT
+                    const openTimeBRT = new Date(marketOpenTime.toLocaleString('en-US', { timeZone: brtTimeZone }));
+                    const closeTimeBRT = new Date(marketCloseTime.toLocaleString('en-US', { timeZone: brtTimeZone }));
+
+                    // Lidar com o fechamento no dia seguinte para Tóquio ou outras sessões
+                    if (closeTimeBRT < openTimeBRT) {
+                        closeTimeBRT.setDate(closeTimeBRT.getDate() + 1);
+                    }
+                    
+                    let startHour = openTimeBRT.getHours() + openTimeBRT.getMinutes() / 60;
+                    let endHour = closeTimeBRT.getHours() + closeTimeBRT.getMinutes() / 60;
+                    
+                    // Ajuste para o gráfico se cruzar a meia-noite
+                    if (endHour < startHour) {
+                        endHour += 24;
+                    }
+
+                    return {
+                        name: market.name,
+                        startHour: startHour,
+                        endHour: endHour
+                    };
+                });
+
+                const orderedData = [
+                    chartData.find(m => m.name === 'Londres'),
+                    chartData.find(m => m.name === 'Nova Iorque'),
+                    chartData.find(m => m.name === 'Frankfurt'),
+                    chartData.find(m => m.name === 'Tóquio'),
+                    chartData.find(m => m.name === 'Brasília'),
+                ].filter(Boolean);
+
+                const labels = orderedData.map(d => d.name);
+                const datasets = [];
+                const maxHour = 24;
+
+                orderedData.forEach((market, index) => {
+                    const start = market.startHour;
+                    let end = market.endHour;
+
+                    const duration = end - start;
+                    const preDuration = start; 
+
+                    datasets.push({
+                        label: `${market.name} - Pre`,
+                        data: Array(orderedData.length).fill(0).map((val, i) => i === index ? preDuration : 0),
+                        backgroundColor: 'rgba(0,0,0,0)',
+                        borderColor: 'rgba(0,0,0,0)',
+                        stack: 'stack0'
+                    });
+
+                    datasets.push({
+                        label: `${market.name} - Session`,
+                        data: Array(orderedData.length).fill(0).map((val, i) => i === index ? duration : 0),
+                        backgroundColor: (ctx) => {
+                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, ctx.chart.width, 0);
+                            const activeColor = 'rgba(74, 222, 128, 0.8)'; 
+                            const inactiveColor = 'rgba(59, 130, 246, 0.6)';
+                            const nowHour = (nowBRT.getHours() + nowBRT.getMinutes() / 60);
+
+                            const sessionStart = market.startHour;
+                            const sessionEnd = market.endHour;
+
+                            const isActive = (nowHour >= sessionStart && nowHour < sessionEnd) ||
+                                (sessionEnd > 24 && (nowHour + 24) < sessionEnd); // Ajuste para dia seguinte
+
+                            return isActive ? activeColor : inactiveColor;
+                        },
+                        borderColor: 'transparent',
+                        borderRadius: 5,
+                        stack: 'stack0'
+                    });
+                });
+
+                if (sessionsChart) {
+                    sessionsChart.destroy();
+                }
+
+                sessionsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (context.dataset.label.includes('- Session')) {
+                                            const market = orderedData[context.dataIndex];
+                                            const start = market.startHour;
+                                            let end = market.endHour;
+                                            
+                                            const startMinute = Math.round((start % 1) * 60);
+                                            const endMinute = Math.round((end % 1) * 60);
+                                            const startStr = `${String(Math.floor(start % 24)).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
+                                            const endStr = `${String(Math.floor(end % 24)).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+                                            return `${market.name}: ${startStr} - ${endStr} BRT`;
+                                        }
+                                        return null;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                min: 0,
+                                max: maxHour,
+                                type: 'linear',
+                                position: 'bottom',
+                                ticks: {
+                                    color: '#9CA3AF',
+                                    stepSize: 2,
+                                    callback: function(value) {
+                                        return `${value}h`;
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(107, 114, 128, 0.3)',
+                                    borderColor: '#4B5563'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#D1D5DB'
+                                },
+                                grid: {
+                                    display: false,
+                                    borderColor: '#4B5563'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- Conversor de Horário ---
+            const timeInput = document.getElementById('time-input');
+            const timezoneSelect = document.getElementById('timezone-select');
+            const convertedTimesDiv = document.getElementById('converted-times');
+
+            function populateTimezoneSelect() {
+                timezoneSelect.innerHTML = '';
+                markets.forEach(market => {
+                    const option = document.createElement('option');
+                    option.value = market.timeZone;
+                    option.textContent = `${market.name} (${getUtcOffset(market.timeZone)})`;
+                    if (market.id === 'brasilia') {
+                        option.selected = true;
+                    }
+                    timezoneSelect.appendChild(option);
+                });
+            }
+
+            function convertTime() {
+                const inputTime = timeInput.value;
+                const inputTimeZone = timezoneSelect.value;
+                convertedTimesDiv.innerHTML = '';
+
+                if (!inputTime) {
+                    convertedTimesDiv.textContent = 'Insira um horário.';
+                    return;
+                }
+
+                const [inputHour, inputMinute] = inputTime.split(':').map(Number);
+                
+                // Cria uma data de referência no FUSO DE ORIGEM
+                const baseDate = new Date(new Date().toLocaleString('en-US', { timeZone: inputTimeZone }));
+                baseDate.setHours(inputHour, inputMinute, 0, 0);
+
+                markets.forEach(market => {
+                    if (market.timeZone === inputTimeZone) return; 
+
+                    const targetOptions = {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: market.timeZone
+                    };
+
+                    // Converte a data de referência para o FUSO DE DESTINO
+                    const convertedTimeStr = baseDate.toLocaleString('en-US', targetOptions);
+                    const convertedDate = new Date(baseDate.toLocaleString('en-US', { timeZone: market.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }));
+                    convertedDate.setHours(convertedTimeStr.split(':')[0], convertedTimeStr.split(':')[1], 0, 0);
+                    
+                    const formattedConvertedTime = convertedTimeStr;
+                    const utcOffset = getUtcOffset(market.timeZone);
+
+                    // Verifica a diferença de dias
+                    const baseDay = baseDate.getDate();
+                    const convertedDay = convertedDate.getDate();
+                    
+                    let dayIndicator = '';
+                    if (convertedDay > baseDay || (baseDay === 30 && convertedDay === 1)) dayIndicator = ' (+1 dia)';
+                    if (convertedDay < baseDay || (baseDay === 1 && convertedDay === 30)) dayIndicator = ' (-1 dia)';
+
+
+                    convertedTimesDiv.innerHTML += `
+                        <p class="flex justify-between items-center bg-gray-700 p-2 rounded-lg">
+                            <span>${market.flag} ${market.name} <span class="text-xs text-gray-400 ml-1">${utcOffset}</span></span>
+                            <span class="font-semibold text-white">${formattedConvertedTime}${dayIndicator}</span>
+                        </p>
+                    `;
+                });
+            }
+
+            timeInput.addEventListener('change', convertTime);
+            timezoneSelect.addEventListener('change', convertTime);
+
+            // --- Conversor Cambial ---
+            const currencyListDiv = document.getElementById('currency-list');
 
             async function fetchCurrencyRates() {
                 try {
                     const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                    if (!response.ok) throw new Error('API indisponível');
+                    if (!response.ok) throw new Error('API failed');
                     const data = await response.json();
-                    if (data && data.rates) currencyRates = { ...data.rates, USD: 1 };
-                    else throw new Error("Estrutura de dados inválida");
-                } catch (error) { console.error("Erro ao buscar cotações:", error); showToast("Erro ao buscar cotações.", "⚠️"); if (Object.keys(currencyRates).length === 0) { currencyRates = { USD: 1, BRL: 5.0, EUR: 0.92, GBP: 0.79, CHF: 0.90 }; } }
-            }
-            
-            function updateCurrency(sourceInput) {
-                const sourceCode = sourceInput.dataset.code;
-                const sourceValue = parseFloat(sourceInput.value);
-                if (isNaN(sourceValue) || sourceValue === 0 || sourceInput.value === '') { currencies.forEach(c => { if (c.code !== sourceCode) document.getElementById(`currency-${c.code}`).value = ''; }); return; }
-                if (!currencyRates[sourceCode]) return;
-                const valueInUSD = sourceValue / currencyRates[sourceCode];
-                currencies.forEach(c => { if (c.code !== sourceCode && currencyRates[c.code]) { document.getElementById(`currency-${c.code}`).value = (valueInUSD * currencyRates[c.code]).toFixed(4); } });
-            }
-
-            function toggleMode() {
-                isDetailedMode = !isDetailedMode;
-                const el = document.getElementById('detailed-sections');
-                el.style.maxHeight = isDetailedMode ? `${el.scrollHeight}px` : '0px';
-                el.style.opacity = isDetailedMode ? '1' : '0';
-                document.getElementById('mode-toggle-text').textContent = isDetailedMode ? 'Detalhado' : 'Compacto';
-                document.getElementById('mode-toggle-icon').textContent = isDetailedMode ? '⚫' : '⚪';
-            }
-            
-            function renderSessionChart() {
-                const ctx = document.getElementById('sessionsChart').getContext('2d');
-                const datasets = [
-                    { name: 'Tóquio', open: 21, close: 6, color: '#EF4444' }, { name: 'Londres', open: 4, close: 12, color: '#3B82F6' }, { name: 'NY', open: 9, close: 17, color: '#22C55E' }
-                ].map(s => ({ label: s.name, data: Array.from({ length: 24 }, (_, i) => (s.open < s.close ? (i >= s.open && i < s.close) : (i >= s.open || i < s.close)) ? 1 : 0), borderColor: s.color, backgroundColor: `${s.color}66`, stepped: true, pointRadius: 0, borderWidth: 2, }));
-                new Chart(ctx, { type: 'line', data: { labels: Array.from({ length: 24 }, (_, i) => `${i}h`), datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false, max: 1.5 }, x: { ticks: { color: '#6B7280', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: '#1F2937' } } }, plugins: { legend: { labels: { color: '#D1D5DB' } } } } });
+                    
+                    currencyRates = {
+                        'USD': 1,
+                        'BRL': data.rates.BRL || 5.00, 
+                        'EUR': data.rates.EUR || 0.92,
+                        'GBP': data.rates.GBP || 0.79,
+                        'CHF': data.rates.CHF || 0.90
+                    };
+                } catch (error) {
+                    console.error('Erro ao buscar taxas de câmbio, usando mock data:', error);
+                    currencyRates = {
+                        'USD': 1, 'BRL': 5.00, 'EUR': 0.92, 'GBP': 0.79, 'CHF': 0.90
+                    };
+                }
+                renderCurrencyConverter();
             }
 
+            function renderCurrencyConverter() {
+                currencyListDiv.innerHTML = '';
+                currencies.forEach(currency => {
+                    const currencyDiv = document.createElement('div');
+                    currencyDiv.className = 'flex items-center space-x-2 bg-gray-700 p-2 rounded-lg';
+                    currencyDiv.innerHTML = `
+                        <span class="text-xl">${currency.flag}</span>
+                        <span class="font-medium w-16">${currency.code}</span>
+                        <input type="number" step="0.01" value="0.00" data-currency="${currency.code}"
+                            class="no-spinner bg-gray-600 text-white rounded-lg p-2 flex-grow text-right
+                            focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    `;
+                    currencyListDiv.appendChild(currencyDiv);
+                });
+
+                document.querySelectorAll('#currency-list input').forEach(input => {
+                    input.addEventListener('input', handleCurrencyInput);
+                });
+                
+                const brlInput = document.querySelector('input[data-currency="BRL"]');
+                if (brlInput && brlInput.value === '0.00') {
+                    brlInput.value = '1.00';
+                    handleCurrencyInput({ target: brlInput });
+                }
+            }
+
+            function handleCurrencyInput(event) {
+                const changedInput = event.target;
+                const changedCurrency = changedInput.dataset.currency;
+                const value = parseFloat(changedInput.value);
+
+                if (isNaN(value) || !currencyRates[changedCurrency]) {
+                    document.querySelectorAll('#currency-list input').forEach(input => {
+                        if (input !== changedInput) {
+                            input.value = '0.00';
+                        }
+                    });
+                    return;
+                }
+
+                const valueInUSD = value / currencyRates[changedCurrency];
+
+                document.querySelectorAll('#currency-list input').forEach(input => {
+                    if (input !== changedInput) {
+                        const targetCurrency = input.dataset.currency;
+                        const convertedValue = valueInUSD * currencyRates[targetCurrency];
+                        input.value = convertedValue.toFixed(2);
+                    }
+                });
+            }
+
+            // --- Alertas Inteligentes ---
+            const sessionAlertsDiv = document.getElementById('session-alerts');
+            const economicEventsDiv = document.getElementById('economic-events');
+
+            function renderAlertSettings() {
+                sessionAlertsDiv.innerHTML = '';
+                markets.filter(m => m.id !== 'brasilia').forEach(market => { 
+                    const isEnabled = alertSettings[market.id];
+                    const alertDiv = `
+                        <label class="flex items-center justify-between p-2 bg-gray-700 rounded-lg cursor-pointer">
+                            <span class="text-white">${market.flag} ${market.name} - Abertura</span>
+                            <input type="checkbox" data-market-id="${market.id}" ${isEnabled ? 'checked' : ''} class="toggle-checkbox form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                        </label>
+                    `;
+                    sessionAlertsDiv.innerHTML += alertDiv;
+                });
+
+                document.querySelectorAll('.toggle-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (event) => {
+                        const marketId = event.target.dataset.marketId;
+                        alertSettings[marketId] = event.target.checked;
+                        saveAlertSettings();
+                        showToast(`Alerta para ${markets.find(m => m.id === marketId).name} ${event.target.checked ? 'ativado' : 'desativado'}`, '🔔');
+                    });
+                });
+            }
+
+            function renderEconomicEvents() {
+                economicEventsDiv.innerHTML = '';
+                if (economicEventsMock.length === 0) {
+                    economicEventsDiv.innerHTML = '<p class="text-gray-500">Nenhum evento de alta volatilidade próximo.</p>';
+                    return;
+                }
+                economicEventsMock.forEach(event => {
+                    const impactStars = '⭐'.repeat(event.impact);
+                    economicEventsDiv.innerHTML += `
+                        <div class="flex justify-between items-center p-2 bg-gray-700 rounded-lg">
+                            <span class="text-gray-300">${event.time} - ${event.event}</span>
+                            <span class="text-yellow-400">${impactStars}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            function checkSessionAlerts() {
+                const nowBRT = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                const currentHourBRT = nowBRT.getHours();
+                const currentMinuteBRT = nowBRT.getMinutes();
+
+                markets.forEach(market => {
+                    if (!alertSettings[market.id]) return;
+
+                    const [openH, openM] = market.open.split(':').map(Number);
+                    const marketOpenTime = new Date(new Date().toLocaleString('en-US', { timeZone: market.timeZone }));
+                    marketOpenTime.setHours(openH, openM, 0, 0);
+                    const marketOpenTimeBRT = new Date(marketOpenTime.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+
+                    const alertTimeH = marketOpenTimeBRT.getHours();
+                    const alertTimeM = marketOpenTimeBRT.getMinutes();
+
+                    // Dispara 5 minutos antes
+                    let triggerHour = alertTimeH;
+                    let triggerMinute = alertTimeM - 5;
+                    if (triggerMinute < 0) {
+                        triggerMinute += 60;
+                        triggerHour = (triggerHour - 1 + 24) % 24; // Ajuste de hora
+                    }
+
+                    const triggerKey = `${market.id}-${triggerHour}:${triggerMinute}`;
+
+                    if (currentHourBRT === triggerHour && currentMinuteBRT === triggerMinute && !triggeredAlerts.has(triggerKey)) {
+                        showToast(`Abertura de ${market.name} em 5 minutos!`, '🔔');
+                        playSound();
+                        triggeredAlerts.add(triggerKey);
+                        setTimeout(() => triggeredAlerts.delete(triggerKey), 60 * 60 * 1000); // 1 hora
+                    }
+                });
+            }
+
+
+            // --- Notificações Toast ---
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            let toastTimeout;
+
+            function showToast(message, icon = '🔔', duration = 3000) {
+                clearTimeout(toastTimeout);
+                toastMessage.textContent = message;
+                toastIcon.textContent = icon;
+                toast.classList.remove('translate-x-[150%]');
+                toast.classList.add('translate-x-0');
+
+                toastTimeout = setTimeout(() => {
+                    toast.classList.remove('translate-x-0');
+                    toast.classList.add('translate-x-[150%]');
+                }, duration);
+            }
+
+            // --- Áudio de Alerta ---
+            function playSound() {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 440; 
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }
+
+            // --- Persistência de Dados (localStorage) ---
+            function saveAlertSettings() {
+                localStorage.setItem('kairosAlertSettings', JSON.stringify(alertSettings));
+            }
+
+            function loadAlertSettings() {
+                const savedSettings = localStorage.getItem('kairosAlertSettings');
+                if (savedSettings) {
+                    alertSettings = JSON.parse(savedSettings);
+                }
+            }
+
+
+            // --- Inicialização ---
             function init() {
-                document.body.addEventListener('click', initAudio, { once: true });
-                document.body.addEventListener('touchstart', initAudio, { once: true });
-                
-                document.querySelector('#clocks .grid').innerHTML = markets.map(createClock).join('');
-                document.querySelector('#sessions .space-y-4').innerHTML = ['tokyo', 'london', 'ny'].map(id => createSession(markets.find(m => m.id === id))).join('');
-                document.getElementById('timezone-select').innerHTML = markets.map(m => `<option value="${m.timeZone}">${m.name}</option>`).join('');
-                document.getElementById('currency-list').innerHTML = currencies.map(createCurrencyInput).join('');
-                document.getElementById('session-alerts').innerHTML = ['tokyo', 'london', 'ny'].map(id => createSessionAlertToggle(markets.find(m => m.id === id))).join('');
-                document.getElementById('economic-events').innerHTML = economicEventsMock.map(e => `<div class="flex justify-between items-center bg-gray-800 p-2 rounded-lg"><span>${e.time} - ${e.event}</span><span class="text-red-400 font-bold">${'🐂'.repeat(e.impact)}</span></div>`).join('');
+                loadAlertSettings();
+                renderClocks();
+                renderSessions(); // Esta função foi corrigida
+                renderSessionsChart();
+                populateTimezoneSelect();
+                convertTime(); 
+                fetchCurrencyRates(); // Esta função agora deve ser chamada
+                renderAlertSettings(); // Esta função agora deve ser chamada
+                renderEconomicEvents(); // Esta função agora deve ser chamada
 
-                document.getElementById('mode-toggle').addEventListener('click', toggleMode);
-                document.getElementById('time-input').addEventListener('input', updateTimeConverter);
-                document.getElementById('timezone-select').addEventListener('change', updateTimeConverter);
-                document.getElementById('currency-list').addEventListener('input', e => { if (e.target.tagName === 'INPUT') updateCurrency(e.target); });
-                document.getElementById('session-alerts').addEventListener('change', e => { if (e.target.classList.contains('toggle-checkbox')) alertSettings[e.target.dataset.market] = e.target.checked; });
-                
-                fetchCurrencyRates().then(() => setInterval(fetchCurrencyRates, 60000));
-                
-                setInterval(() => { updateClocks(); updateSessions(); }, 1000);
-                
-                renderSessionChart();
-                
-                const defaultTimeInput = document.getElementById('time-input');
-                const now = new Date();
-                defaultTimeInput.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                setInterval(() => {
+                    renderClocks();
+                    renderSessions();
+                    renderSessionsChart(); 
+                    checkSessionAlerts();
+                }, 1000);
 
-                setTimeout(() => {
-                    const detailedSections = document.getElementById('detailed-sections');
-                    detailedSections.style.maxHeight = detailedSections.scrollHeight + 'px';
-                    updateTimeConverter();
-                }, 100);
+                setInterval(fetchCurrencyRates, 60 * 1000);
+
+                if (!timeInput.value) {
+                    const now = new Date();
+                    timeInput.value = formatTime(now);
+                    convertTime();
+                }
             }
 
             init();
@@ -306,4 +744,3 @@
     </script>
 </body>
 </html>
-
