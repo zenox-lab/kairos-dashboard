@@ -30,7 +30,7 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-            height: 240px; 
+            height: 250px; 
             max-height: 280px;
         }
     </style>
@@ -250,7 +250,6 @@
                             break;
                     }
 
-                    // Status and Countdown Logic
                     if (sessionStart && sessionEnd) {
                         if (nowBRT >= sessionStart && nowBRT < sessionEnd) {
                             statusText = 'Aberto'; statusColor = 'text-green-400';
@@ -268,10 +267,9 @@
                         }
                     } 
                     if (!countdownText) {
-                         // Find next session logic here if needed, for simplicity we leave it empty if not today
+                         // Lógica para encontrar a próxima sessão pode ser adicionada aqui
                     }
 
-                    // Progress Bar Logic
                     let progressWidth = 0;
                     let progressBarColor = closedColor;
                     if (statusText === 'Aberto') {
@@ -307,7 +305,6 @@
                 });
             }
 
-
             let sessionsChart;
             function renderSessionsChart() {
                 const ctx = document.getElementById('sessionsChart')?.getContext('2d');
@@ -317,11 +314,11 @@
                 const nowHour = nowBRT.getHours() + nowBRT.getMinutes() / 60;
                 
                 const marketIntervals = {
-                    'liffe': { flag: '🇬🇧', name: 'LIFFE (UK)', intervals: [[4, 18]], openColor: '#ef4444' },
-                    'cme': { flag: '🇺🇸', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]], openColor: '#3b82f6' },
-                    'eurex': { flag: '🇪🇺', name: 'Eurex (EUR)', intervals: [[3.25, 17]], openColor: '#3b82f6' },
-                    'jpx': { flag: '🇯🇵', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]], openColor: '#ffffff' },
-                    'b3': { flag: '🇧🇷', name: 'B3 (BRA)', intervals: [[9.75, 18.416]], openColor: '#22c55e' },
+                    'liffe': { flag: '🇬🇧', label: 'GB', name: 'LIFFE (UK)', intervals: [[4, 18]], openColor: '#ef4444' },
+                    'cme': { flag: '🇺🇸', label: 'US', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]], openColor: '#3b82f6' },
+                    'eurex': { flag: '🇪🇺', label: 'EU', name: 'Eurex (EUR)', intervals: [[3.25, 17]], openColor: '#3b82f6' },
+                    'jpx': { flag: '🇯🇵', label: 'JP', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]], openColor: '#ffffff' },
+                    'b3': { flag: '🇧🇷', label: 'BR', name: 'B3 (BRA)', intervals: [[9.75, 18.416]], openColor: '#22c55e' },
                     closedColor: '#6b7280',
                     openThickness: 16,
                     closedThickness: 8
@@ -346,20 +343,27 @@
                     return market.intervals.some(interval => time >= interval[0] && time < interval[1]);
                 };
 
-                const datasets = [];
+                // ✅ Lógica de datasets corrigida para alinhamento
+                const dataForChart = [];
+                const backgroundColors = [];
+                const barThicknesses = [];
+
                 orderedData.forEach(market => {
                     const isActive = isMarketCurrentlyOpen(market, nowHour);
                     market.intervals.forEach(interval => {
-                        datasets.push({
-                            label: market.name,
-                            data: [{ x: interval, y: market.name }],
-                            backgroundColor: isActive ? market.openColor : marketIntervals.closedColor,
-                            borderColor: 'transparent',
-                            borderRadius: 5,
-                            barThickness: isActive ? marketIntervals.openThickness : marketIntervals.closedThickness
-                        });
+                        dataForChart.push({ x: interval, y: market.name });
+                        backgroundColors.push(isActive ? market.openColor : marketIntervals.closedColor);
+                        barThicknesses.push(isActive ? marketIntervals.openThickness : marketIntervals.closedThickness);
                     });
                 });
+
+                const datasets = [{
+                    data: dataForChart,
+                    backgroundColor: backgroundColors,
+                    barThickness: barThicknesses,
+                    borderColor: 'transparent',
+                    borderRadius: 5
+                }];
                 
                 const customLabelsPlugin = {
                     id: 'customLabels',
@@ -369,12 +373,12 @@
 
                         orderedData.forEach((market, index) => {
                              if (!market) return;
-                            ctx.font = '20px Arial';
+                            ctx.font = '14px Roboto';
                             ctx.fillStyle = '#E5E7EB';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             const yPos = y.getPixelForValue(index);
-                            ctx.fillText(market.flag, left - 25, yPos);
+                            ctx.fillText(market.label, left - 25, yPos);
                         });
                         
                         const currentHour = nowBRT.getHours() + nowBRT.getMinutes() / 60;
@@ -401,19 +405,17 @@
                     type: 'bar',
                     data: {
                         labels: orderedData.map(d => d.name),
-                        datasets: datasets
+                        datasets: datasets // ✅ Usando o novo dataset único
                     },
                     options: {
                         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { left: 30 } },
+                        layout: { padding: { left: 40 } },
                         plugins: { legend: { display: false }, tooltip: { enabled: false } },
                         scales: {
                             x: { min: 0, max: 24, ticks: { color: '#9CA3AF', stepSize: 2, callback: (v) => `${v}h` }, grid: { color: 'rgba(107, 114, 128, 0.3)' } },
                             y: { 
                                 ticks: { display: false }, 
                                 grid: { display: false },
-                                categoryPercentage: 0.7,
-                                barPercentage: 0.9
                             }
                         }
                     },
@@ -438,7 +440,7 @@
                 const timeInput = document.getElementById('time-input');
                 const timezoneSelect = document.getElementById('timezone-select');
                 const convertedTimesDiv = document.getElementById('converted-times');
-                if(!timeInput || !timezoneSelect || !convertedTimesDiv) return;
+                if (!timeInput || !timezoneSelect || !convertedTimesDiv) return;
 
                 const inputTime = timeInput.value;
                 const inputTimeZone = timezoneSelect.value;
@@ -449,10 +451,9 @@
                     return;
                 }
                 
-                const now = new Date();
-                const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${inputTime}:00`;
-                const sourceDate = new Date(new Date(dateStr).toLocaleString("en-US", {timeZone: inputTimeZone}));
-
+                const nowInSourceTz = new Date(new Date().toLocaleString('en-US', { timeZone: inputTimeZone }));
+                const [h, m] = inputTime.split(':').map(Number);
+                nowInSourceTz.setHours(h, m, 0, 0);
 
                 markets.forEach(market => {
                     if (market.timeZone === inputTimeZone) return;
@@ -462,13 +463,16 @@
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: false
-                    }).format(sourceDate);
+                    }).format(nowInSourceTz);
 
-                    const targetDate = new Date(sourceDate.toLocaleString('en-US', {timeZone: market.timeZone}));
+                    const targetDate = new Date(nowInSourceTz.toLocaleString('en-US', {timeZone: market.timeZone}));
                     
                     let dayIndicator = '';
-                    if(targetDate.getDate() > sourceDate.getDate() || (targetDate.getMonth() > sourceDate.getMonth() || targetDate.getFullYear() > sourceDate.getFullYear())) dayIndicator = ' (+1 dia)';
-                    if(targetDate.getDate() < sourceDate.getDate() || (targetDate.getMonth() < sourceDate.getMonth() || targetDate.getFullYear() < sourceDate.getFullYear())) dayIndicator = ' (-1 dia)';
+                    const sourceDay = Math.floor((nowInSourceTz.getTime() - new Date(nowInSourceTz.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+                    const targetDay = Math.floor((targetDate.getTime() - new Date(targetDate.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+                    
+                    if (targetDay > sourceDay || (targetDate.getFullYear() > nowInSourceTz.getFullYear())) dayIndicator = ' (+1 dia)';
+                    if (targetDay < sourceDay || (targetDate.getFullYear() < nowInSourceTz.getFullYear())) dayIndicator = ' (-1 dia)';
 
 
                     convertedTimesDiv.innerHTML += `
@@ -478,6 +482,7 @@
                         </p>`;
                 });
             }
+
 
             async function fetchCurrencyRates() {
                 try {
