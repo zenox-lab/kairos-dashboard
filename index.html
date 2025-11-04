@@ -214,17 +214,45 @@
                             }
                             break;
                         case 'jpx':
-                            displayTimes = '21:00 - 07:00 BRT';
-                            const isOpen = (nowDay !== 5 && nowDay !== 6 && nowTime >= 21) || (nowDay !== 6 && nowDay !== 0 && nowTime < 7);
-                            if (isOpen) {
-                                if (nowTime >= 21) {
-                                    sessionStart = setTime(nowBRT, 21, 0);
-                                    sessionEnd = setTime(nowBRT, 7, 0);
-                                    sessionEnd.setDate(sessionEnd.getDate() + 1);
+                            displayTimes = '20:45-03:45 / 05:00-18:00 BRT (Nikkei Fut.)';
+                            if (nowDay === 0 || nowDay === 6) {
+                                // Fim de semana, próxima segunda
+                                const daysToNextMon = nowDay === 0 ? 1 : 2;
+                                const nextMon = new Date(nowBRT);
+                                nextMon.setDate(nextMon.getDate() + daysToNextMon);
+                                sessionStart = setTime(nextMon, 20, 45);
+                            } else {
+                                const segments = [
+                                    {start: 20.75, end: 24, sh: 20, sm: 45, eh: 0, em: 0, eadj: 1},
+                                    {start: 0, end: 3.75, sh: 0, sm: 0, eh: 3, em: 45, eadj: 0},
+                                    {start: 5, end: 18, sh: 5, sm: 0, eh: 18, em: 0, eadj: 0}
+                                ];
+                                let currentSeg = null;
+                                for (let seg of segments) {
+                                    if ((seg.start <= nowTime && nowTime < seg.end) || (seg.end === 24 && nowTime >= seg.start)) {
+                                        currentSeg = seg;
+                                        break;
+                                    }
+                                }
+                                if (currentSeg) {
+                                    sessionStart = setTime(nowBRT, currentSeg.sh, currentSeg.sm);
+                                    sessionEnd = setTime(nowBRT, currentSeg.eh, currentSeg.em);
+                                    sessionEnd.setDate(sessionEnd.getDate() + currentSeg.eadj);
                                 } else {
-                                    sessionStart = setTime(nowBRT, 21, 0);
-                                    sessionStart.setDate(sessionStart.getDate() - 1);
-                                    sessionEnd = setTime(nowBRT, 7, 0);
+                                    // Encontrar próximo início
+                                    let minDiff = Infinity;
+                                    let nextSeg = null;
+                                    for (let seg of segments) {
+                                        let diff = seg.start - nowTime;
+                                        if (diff < 0) diff += 24;
+                                        if (diff > 0 && diff < minDiff) {
+                                            minDiff = diff;
+                                            nextSeg = seg;
+                                        }
+                                    }
+                                    if (nextSeg) {
+                                        sessionStart = setTime(nowBRT, nextSeg.sh, nextSeg.sm);
+                                    }
                                 }
                             }
                             break;
@@ -236,10 +264,6 @@
                             if (market.id === 'cme' && nowBRT.getHours() === 18) {
                                 statusText = 'Pausa'; statusColor = 'text-yellow-400';
                                 countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 19, 0))}`;
-                            }
-                            if (market.id === 'jpx' && nowTime >= 3.5 && nowTime < 4.5) {
-                                statusText = 'Pausa'; statusColor = 'text-yellow-400';
-                                countdownText = `Volta em ${getCountdown(setTime(new Date(nowBRT), 4, 30))}`;
                             }
                         } else if (nowBRT < sessionStart) {
                              countdownText = `Abre em ${getCountdown(sessionStart)}`;
@@ -256,7 +280,7 @@
                         const remainingPercentage = 100 - (elapsedTime / sessionDuration) * 100;
                         progressWidth = Math.max(0, remainingPercentage);
                         progressBarColor = marketColors[market.id];
-                    } else if (nowBRT < sessionStart) {
+                    } else if (sessionStart && nowBRT < sessionStart) {
                         progressWidth = 100;
                     }
                     const progressBarHTML = `
@@ -292,7 +316,7 @@
                     'liffe': { flag: '🇬🇧', label: 'GB', name: 'LIFFE (UK)', intervals: [[4, 18]], openColor: '#ef4444' },
                     'cme': { flag: '🇺🇸', label: 'US', name: 'CME (EUA)', intervals: [[0, 18], [19, 24]], openColor: '#3b82f6' },
                     'eurex': { flag: '🇪🇺', label: 'EU', name: 'Eurex (EUR)', intervals: [[3.25, 17]], openColor: '#3b82f6' },
-                    'jpx': { flag: '🇯🇵', label: 'JP', name: 'JPX (JAP)', intervals: [[0, 3.5], [4.5, 7], [21, 24]], openColor: '#ffffff' },
+                    'jpx': { flag: '🇯🇵', label: 'JP', name: 'JPX (JAP)', intervals: [[20.75, 24], [0, 3.75], [5, 18]], openColor: '#ffffff' },
                     'b3': { flag: '🇧🇷', label: 'BR', name: 'B3 (BRA)', intervals: [[9.75, 18.416]], openColor: '#22c55e' },
                     closedColor: '#6b7280',
                     openThickness: 16,
@@ -311,40 +335,35 @@
                          if (! (isAfterOpen && isBeforeClose)) return false;
                     }
                      if (market.name.includes('JPX')) {
-                        const isOpen = (nowDay !== 5 && nowDay !== 6 && time >= 21) || (nowDay !== 6 && nowDay !== 0 && time < 7);
-                        if (!isOpen) return false;
+                        if (nowDay === 0 || nowDay === 6) return false;
+                        return (time >= 20.75) || (time <= 3.75) || (time >= 5 && time <= 18);
                     }
                     return market.intervals.some(interval => time >= interval[0] && time < interval[1]);
                 };
-
-                // Calcular status ativo por mercado
-                const marketActive = {};
-                orderedData.forEach(market => {
-                    marketActive[market.label] = isMarketCurrentlyOpen(market, nowHour);
-                });
-
-                // Criar datasets múltiplos para segmentos (um por intervalo)
-                const datasets = [];
-                orderedData.forEach((market, marketIndex) => {
-                    const isActive = marketActive[market.label];
-                    const color = isActive ? market.openColor : marketIntervals.closedColor;
-                    const thickness = isActive ? marketIntervals.openThickness : marketIntervals.closedThickness;
-
-                    market.intervals.forEach(interval => {
-                        const data = new Array(orderedData.length).fill(null);
-                        data[marketIndex] = [interval[0], interval[1]]; // Range bar: [min, max]
-
-                        datasets.push({
-                            data: data,
-                            backgroundColor: color,
-                            borderColor: 'transparent',
-                            borderRadius: 5,
-                            barThickness: thickness,
-                            // Evita stacking, permite sobreposição em y mas ranges separados em x
-                            stack: 'segments'
+               
+                const sessionBarsPlugin = {
+                    id: 'sessionBars',
+                    afterDraw: (chart) => {
+                        const {ctx, chartArea: {left, right, top, bottom}, scales: {x, y}} = chart;
+                        ctx.save();
+                        orderedData.forEach((market, marketIndex) => {
+                            const yPos = y.getPixelForValue(marketIndex);
+                            const isActive = isMarketCurrentlyOpen(market, nowHour);
+                            const color = isActive ? market.openColor : marketIntervals.closedColor;
+                            const thickness = isActive ? marketIntervals.openThickness : marketIntervals.closedThickness;
+                            const halfThick = thickness / 2;
+                            const startY = yPos - halfThick;
+                            const height = thickness;
+                            market.intervals.forEach(interval => {
+                                const startX = x.getPixelForValue(interval[0]);
+                                const endX = x.getPixelForValue(interval[1]);
+                                ctx.fillStyle = color;
+                                ctx.fillRect(startX, startY, endX - startX, height);
+                            });
                         });
-                    });
-                });
+                        ctx.restore();
+                    }
+                };
                
                 const customLabelsPlugin = {
                     id: 'customLabels',
@@ -383,31 +402,25 @@
                     type: 'bar',
                     data: {
                         labels: orderedData.map(d => d.name),
-                        datasets: datasets
+                        datasets: [{
+                            data: new Array(orderedData.length).fill(0),
+                            backgroundColor: 'transparent',
+                            borderWidth: 0
+                        }]
                     },
                     options: {
-                        indexAxis: 'y', 
-                        responsive: true, 
-                        maintainAspectRatio: false,
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                         layout: { padding: { left: 40 } },
-                        plugins: { 
-                            legend: { display: false }, 
-                            tooltip: { enabled: false } 
-                        },
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
                         scales: {
-                            x: { 
-                                min: 0, 
-                                max: 24, 
-                                ticks: { color: '#9CA3AF', stepSize: 2, callback: (v) => `${v}h` }, 
-                                grid: { color: 'rgba(107, 114, 128, 0.3)' } 
-                            },
+                            x: { min: 0, max: 24, ticks: { color: '#9CA3AF', stepSize: 2, callback: (v) => `${v}h` }, grid: { color: 'rgba(107, 114, 128, 0.3)' } },
                             y: {
                                 ticks: { display: false },
                                 grid: { display: false },
                             }
                         }
                     },
-                    plugins: [customLabelsPlugin]
+                    plugins: [customLabelsPlugin, sessionBarsPlugin]
                 });
             }
            
