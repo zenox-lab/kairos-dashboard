@@ -103,6 +103,9 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Obtenha uma chave API gratuita em: https://site.financialmodelingprep.com/register
+            const FMP_API_KEY = 'sua_chave_api_aqui'; // Substitua pela sua chave gratuita do FMP
+
             const markets = [
                 { id: 'cme', name: 'CME (EUA)', flag: '🇺🇸', timeZone: 'America/Chicago' },
                 { id: 'eurex', name: 'Eurex (EUR)', flag: '🇪🇺', timeZone: 'Europe/Berlin' },
@@ -424,6 +427,53 @@
                 });
             }
            
+            async function fetchEconomicEvents() {
+                if (FMP_API_KEY === 'sua_chave_api_aqui') {
+                    console.warn('Chave API do FMP não configurada. Usando dados mock.');
+                    return economicEventsMock;
+                }
+                try {
+                    const today = new Date().toISOString().split('T')[0];
+                    const endDate = new Date();
+                    endDate.setDate(endDate.getDate() + 7); // Próximos 7 dias
+                    const toDate = endDate.toISOString().split('T')[0];
+                    const url = `https://financialmodelingprep.com/api/v3/economic_calendar?from=${today}&to=${toDate}&apikey=${FMP_API_KEY}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Falha na API');
+                    const data = await response.json();
+                    // Filtrar eventos de alto impacto (assumindo 'impact' como 'high')
+                    const highImpactEvents = data
+                        .filter(event => event.impact && event.impact.toLowerCase() === 'high')
+                        .slice(0, 5) // Top 5
+                        .map(event => ({
+                            time: event.time || event.date.split(' ')[1], // Ajustar formato de tempo
+                            event: event.event,
+                            impact: 3 // Alto impacto
+                        }));
+                    return highImpactEvents.length > 0 ? highImpactEvents : economicEventsMock;
+                } catch (error) {
+                    console.error('Erro ao buscar eventos econômicos:', error);
+                    return economicEventsMock;
+                }
+            }
+           
+            function renderEconomicEvents(events = []) {
+                const economicEventsDiv = document.getElementById('economic-events');
+                if(!economicEventsDiv) return;
+                economicEventsDiv.innerHTML = '';
+                if (events.length === 0) {
+                    economicEventsDiv.innerHTML = '<p class="text-gray-500">Nenhum evento de alta volatilidade próximo.</p>';
+                } else {
+                    events.forEach(event => {
+                        economicEventsDiv.innerHTML += `
+                            <div class="flex justify-between items-center p-2 bg-gray-700 rounded-lg">
+                                <span class="text-gray-300">${event.time} - ${event.event}</span>
+                                <span class="text-yellow-400">${'⭐'.repeat(event.impact)}</span>
+                            </div>`;
+                    });
+                }
+            }
+           
             function populateTimezoneSelect() {
                 const timezoneSelect = document.getElementById('timezone-select');
                 if(!timezoneSelect) return;
@@ -546,22 +596,6 @@
                     });
                 });
             }
-            function renderEconomicEvents() {
-                const economicEventsDiv = document.getElementById('economic-events');
-                if(!economicEventsDiv) return;
-                economicEventsDiv.innerHTML = '';
-                if (economicEventsMock.length === 0) {
-                    economicEventsDiv.innerHTML = '<p class="text-gray-500">Nenhum evento de alta volatilidade próximo.</p>';
-                } else {
-                    economicEventsMock.forEach(event => {
-                        economicEventsDiv.innerHTML += `
-                            <div class="flex justify-between items-center p-2 bg-gray-700 rounded-lg">
-                                <span class="text-gray-300">${event.time} - ${event.event}</span>
-                                <span class="text-yellow-400">${'⭐'.repeat(event.impact)}</span>
-                            </div>`;
-                    });
-                }
-            }
            
             function checkSessionAlerts() {
                 // Lógica de alerta pode ser refinada com os novos tempos
@@ -596,7 +630,7 @@
                 const savedSettings = localStorage.getItem('kairosAlertSettings');
                 if (savedSettings) alertSettings = JSON.parse(savedSettings);
             }
-            function init() {
+            async function init() {
                 loadAlertSettings();
                 populateTimezoneSelect();
                
@@ -605,9 +639,12 @@
                     timeInput.value = formatTime(new Date());
                 }
                 convertTime();
-                fetchCurrencyRates();
+                await fetchCurrencyRates();
                 renderAlertSettings();
-                renderEconomicEvents();
+               
+                // Buscar e renderizar eventos econômicos reais
+                const events = await fetchEconomicEvents();
+                renderEconomicEvents(events);
                
                 renderClocks();
                 renderSessions();
@@ -619,6 +656,11 @@
                
                 setInterval(renderSessionsChart, 10000);
                 setInterval(fetchCurrencyRates, 60000);
+                // Atualizar eventos a cada 15 minutos
+                setInterval(async () => {
+                    const newEvents = await fetchEconomicEvents();
+                    renderEconomicEvents(newEvents);
+                }, 900000); // 15 min
                
                 document.getElementById('time-input')?.addEventListener('change', convertTime);
                 document.getElementById('timezone-select')?.addEventListener('change', convertTime);
